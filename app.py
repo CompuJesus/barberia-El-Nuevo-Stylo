@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+# Agrega render_template a los imports de flask
+from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
 import os
 from datetime import datetime
@@ -12,9 +13,10 @@ client = MongoClient(MONGO_URI)
 db = client["barberia_db"]
 coleccion_facturacion = db["facturacion"]
 
+# Modifica la ruta inicial para que muestre el archivo HTML
 @app.route('/', methods=['GET'])
 def inicio():
-    return "¡El sistema de la barbería está en línea!"
+    return render_template('index.html')
 
 # Ruta para registrar un nuevo corte
 @app.route('/api/nueva_venta', methods=['POST'])
