@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Barbería</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <nav class="bg-gray-900 text-white p-4 flex justify-between items-center shadow-lg">
+        <h1 class="text-xl font-bold">💈 Control de Barbería</h1>
+        <div class="espacio-botones">
+            <button class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm font-semibold shadow">Exportar Excel</button>
+            <button class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-semibold shadow ml-2">Exportar PDF</button>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-900">
+            <h2 class="text-2xl font-bold mb-4">Registrar Corte / Venta</h2>
+
+            <form id="form-venta" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
+                    <input type="text" id="cliente" class="mt-1 w-full p-2 border border-gray-300 rounded focus:ring-gray-500 focus:border-gray-500" placeholder="Ej. Juan Pérez" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Servicio Realizado</label>
+                    <select id="servicio" class="mt-1 w-full p-2 border border-gray-300 rounded bg-white">
+                        <option value="Corte Clásico">Corte Clásico</option>
+                        <option value="Corte y Barba">Corte y Barba</option>
+                        <option value="Solo Barba">Solo Barba</option>
+                        <option value="Corte de Niño">Corte de Niño</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
+                        <input type="number" step="0.01" id="monto" class="mt-1 w-full p-2 border border-gray-300 rounded" placeholder="Ej. 5.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                        <select id="pago" class="mt-1 w-full p-2 border border-gray-300 rounded bg-white">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Pago Móvil">Pago Móvil</option>
+                            <option value="Zelle">Zelle / Divisas</option>
+                            <option value="Punto de Venta">Punto de Venta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Referencia (Opcional)</label>
+                    <input type="text" id="referencia" class="mt-1 w-full p-2 border border-gray-300 rounded" placeholder="Últimos 4 dígitos o comprobante">
+                </div>
+
+                <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 rounded hover:bg-gray-800 transition duration-300 shadow-lg text-lg">
+                    Registrar Venta
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-900">
+            <h2 class="text-2xl font-bold mb-4">Calendario de Citas</h2>
+            <div id="calendario"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. Inicializar el Calendario
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendario');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridDay', // Muestra la vista por horas del día
+                locale: 'es', // En español
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: 'timeGridDay,timeGridWeek'
+                },
+                slotMinTime: '08:00:00', // Hora de apertura
+                slotMaxTime: '20:00:00', // Hora de cierre
+                selectable: true,
+                // Al hacer clic en una hora vacía, pregunta si quieres hacer reserva
+                dateClick: function(info) {
+                    let nombre = prompt('Ingresa el nombre del cliente para agendar a las ' + info.dateStr.split('T')[1].substring(0,5));
+                    if (nombre) {
+                        calendar.addEvent({
+                            title: nombre,
+                            start: info.dateStr,
+                            color: '#111827' // Color oscuro de la marca
+                        });
+                        // Aquí a futuro se enviaría el fetch al backend para guardar la reserva en Mongo
+                    }
+                }
+            });
+            calendar.render();
+        });
+
+        // 2. Lógica para enviar el formulario a la base de datos
+        document.getElementById('form-venta').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Evita que la página recargue
+
+            // Recolectar datos del formulario
+            const datosVenta = {
+                cliente: document.getElementById('cliente').value,
+                servicio: document.getElementById('servicio').value,
+                monto_cobrado: parseFloat(document.getElementById('monto').value),
+                metodo_pago: document.getElementById('pago').value,
+                referencia: document.getElementById('referencia').value
+            };
+
+            try {
+                // Enviar a la ruta de Flask
+                const respuesta = await fetch('/api/nueva_venta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosVenta)
+                });
+
+                if (respuesta.ok) {
+                    alert('¡Corte registrado exitosamente en la base de datos!');
+                    document.getElementById('form-venta').reset(); // Limpiar formulario
+                } else {
+                    alert('Hubo un error al registrar el corte.');
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                alert('No se pudo conectar con el servidor.');
+            }
+        });
+    </script>
+</body>
+</html>
