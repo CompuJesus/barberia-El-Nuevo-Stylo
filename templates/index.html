@@ -11,10 +11,14 @@
 
     <nav class="bg-gray-900 text-white p-4 flex justify-between items-center shadow-lg">
         <h1 class="text-xl font-bold">💈 Control de Barbería</h1>
-        <div class="espacio-botones">
-            <button class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm font-semibold shadow">Exportar Excel</button>
-            <button class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-semibold shadow ml-2">Exportar PDF</button>
-        </div>
+       <div class="espacio-botones flex gap-2">
+    <a href="/api/exportar/excel" class="bg-green-600 hover:bg-green-500 px-3 py-2 rounded text-sm font-semibold shadow text-white text-center inline-block cursor-pointer transition-colors">
+        Exportar Excel
+    </a>
+    <a href="/api/exportar/pdf" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded text-sm font-semibold shadow text-white text-center inline-block cursor-pointer transition-colors">
+        Exportar PDF
+    </a>
+</div>
     </nav>
 
     <div class="container mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
